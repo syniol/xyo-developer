@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xyo-postgres
+  namespace: xyo
+  labels:
+    app: xyo-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xyo-postgres
+  template:
+    metadata:
+      labels:
+        app: xyo-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: xyo
+            - name: POSTGRES_USER
+              value: xyo_user
+            - name: POSTGRES_PASSWORD
+              value: xyo_secure_pass
+          ports:
+            - containerPort: 5432
+              name: dbport
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pgdata
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - xyo_user
+                - -d
+                - xyo
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - xyo_user
+                - -d
+                - xyo
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+      volumes:
+        - name: pgdata
+          emptyDir: {} # For production, use a PersistentVolumeClaim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xyo-postgres
+  namespace: xyo
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: xyo-postgres

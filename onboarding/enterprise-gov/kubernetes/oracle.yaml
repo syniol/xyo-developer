@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xyo-oracle
+  namespace: xyo
+  labels:
+    app: xyo-oracle
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xyo-oracle
+  template:
+    metadata:
+      labels:
+        app: xyo-oracle
+    spec:
+      imagePullSecrets:
+        - name: syniol-registry-secret
+      containers:
+        - name: oracle
+          image: cr.syniol.com/xyo/oracle:v1.2.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9092
+              name: grpc
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xyo-oracle
+  namespace: xyo
+spec:
+  ports:
+    - port: 9092
+      targetPort: 9092
+  selector:
+    app: xyo-oracle

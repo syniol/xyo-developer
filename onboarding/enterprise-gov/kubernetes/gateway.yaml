@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xyo-gateway
+  namespace: xyo
+  labels:
+    app: xyo-gateway
+spec:
+  replicas: 2 # Scale for high availability and load balancing
+  selector:
+    matchLabels:
+      app: xyo-gateway
+  template:
+    metadata:
+      labels:
+        app: xyo-gateway
+    spec:
+      imagePullSecrets:
+        - name: syniol-registry-secret
+      containers:
+        - name: gateway
+          image: cr.syniol.com/xyo/gateway:v1.2.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: LOG_LEVEL
+              value: "info"
+            - name: XYO_ENRICHMENT_ADDR
+              value: "xyo-enrichment:9091"
+            - name: XYO_DB_DSN
+              value: "postgres://xyo_user:xyo_secure_pass@xyo-postgres:5432/xyo?sslmode=disable"
+            - name: XYO_LOGOS_DIR
+              value: "/var/lib/xyo/logos"
+            - name: XYO_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: xyo-license-secret
+                  key: license-key
+          volumeMounts:
+            - mountPath: /var/lib/xyo/logos
+              name: xyo-logos-volume
+              readOnly: true # Gateway only needs to serve the files
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+      volumes:
+        - name: xyo-logos-volume
+          persistentVolumeClaim:
+            claimName: xyo-logos-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xyo-gateway
+  namespace: xyo
+spec:
+  type: ClusterIP # Change to LoadBalancer or NodePort if exposing directly
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: xyo-gateway

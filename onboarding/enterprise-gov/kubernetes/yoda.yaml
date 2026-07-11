@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xyo-yoda
+  namespace: xyo
+  labels:
+    app: xyo-yoda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xyo-yoda
+  template:
+    metadata:
+      labels:
+        app: xyo-yoda
+    spec:
+      imagePullSecrets:
+        - name: syniol-registry-secret
+      containers:
+        - name: yoda
+          image: cr.syniol.com/xyo/yoda:v1.2.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9093
+              name: grpc
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xyo-yoda
+  namespace: xyo
+spec:
+  ports:
+    - port: 9093
+      targetPort: 9093
+  selector:
+    app: xyo-yoda

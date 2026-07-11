@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: xyo-logos-pvc
+  namespace: xyo
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  # It is recommended to use an SSD-backed StorageClass (e.g., gp3, premium-rwo, or managed-csi)
+  # storageClassName: gp3-ssd

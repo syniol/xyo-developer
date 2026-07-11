@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Database storage for caching and audit logs
+  postgres:
+    image: postgres:15-alpine
+    container_name: xyo-postgres
+    environment:
+      POSTGRES_DB: xyo
+      POSTGRES_USER: xyo_user
+      POSTGRES_PASSWORD: xyo_secure_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - xyo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xyo_user -d xyo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # XYO Oracle: Heuristic pattern matcher engine
+  xyo-oracle:
+    image: cr.syniol.com/xyo/oracle:v1.2.0
+    container_name: xyo-oracle
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+    networks:
+      - xyo-network
+
+  # XYO Yoda: Machine learning categorization engine
+  xyo-yoda:
+    image: cr.syniol.com/xyo/yoda:v1.2.0
+    container_name: xyo-yoda
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+    networks:
+      - xyo-network
+
+  # XYO Enrichment: Coordinator service that runs heuristics & AI categorization
+  xyo-enrichment:
+    image: cr.syniol.com/xyo/enrichment:v1.2.0
+    container_name: xyo-enrichment
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+      - XYO_ORACLE_ADDR=xyo-oracle:9092
+      - XYO_YODA_ADDR=xyo-yoda:9093
+      - XYO_LOGOS_DIR=/var/lib/xyo/logos
+      - XYO_LICENSE_KEY=${XYO_LICENSE_KEY}
+    volumes:
+      - xyo-logos:/var/lib/xyo/logos
+    networks:
+      - xyo-network
+    depends_on:
+      - xyo-oracle
+      - xyo-yoda
+
+  # XYO Gateway: Entrypoint HTTP server serving client requests
+  xyo-gateway:
+    image: cr.syniol.com/xyo/gateway:v1.2.0
+    container_name: xyo-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # HTTP API
+    environment:
+      - LOG_LEVEL=info
+      - XYO_ENRICHMENT_ADDR=xyo-enrichment:9091
+      - XYO_DB_DSN=postgres://xyo_user:xyo_secure_pass@postgres:5432/xyo?sslmode=disable
+      - XYO_LOGOS_DIR=/var/lib/xyo/logos
+      - XYO_LICENSE_KEY=${XYO_LICENSE_KEY}
+    volumes:
+      - xyo-logos:/var/lib/xyo/logos:ro # Read-only for Gateway to serve static logos
+    networks:
+      - xyo-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      xyo-enrichment:
+        condition: service_started
+
+volumes:
+  postgres_data:
+    driver: local
+  xyo-logos:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/lib/xyo/logos
+      o: bind
+
+networks:
+  xyo-network:
+    driver: bridge
