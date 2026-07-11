@@ -3,16 +3,16 @@ Centralised portal for XYO Developer Documentations and Libraries.
 
 
 ## Onboarding
-* [Small and Medium Enterprises (SMEs) <sup><i>Basic SaaS Plan</i></sup>](https://github.com/syniol/xyo-developer/tree/main/onboarding/sme)
-* [Large Business <sup><i>Partial On-premises Deployment</i></sup>](https://github.com/syniol/xyo-developer/tree/main/onboarding/large)
-* [Large Enterprises and Government <sup><i>Complete On-premises Deployment</i></sup>](https://github.com/syniol/xyo-developer/tree/main/onboarding/enterprise-gov)
+* [Small and Medium Enterprises (SMEs)](https://github.com/syniol/xyo-developer/tree/main/onboarding/sme) <sup><i>Basic SaaS Plan</i></sup>
+* [Large Business](https://github.com/syniol/xyo-developer/tree/main/onboarding/large) <sup><i>Partial On-premises Deployment</i></sup>
+* [Large Enterprises and Government](https://github.com/syniol/xyo-developer/tree/main/onboarding/enterprise-gov) <sup><i>Complete On-premises Deployment</i></sup>
 
 
 ## XYO SDKs
 There are currently six production ready SDK available for:
 
-* [C++ SDK <sup><i>AI Generated</i></sup>](https://github.com/syniol/xyo-sdk-cpp)
-* [Java SDK <sup><i>AI Generated</i></sup>](https://github.com/syniol/xyo-sdk-java)
+* [C++ SDK](https://github.com/syniol/xyo-sdk-cpp) <sup><i>AI Generated</i></sup>
+* [Java SDK](https://github.com/syniol/xyo-sdk-java) <sup><i>AI Generated</i></sup>
 * [Rust SDK](https://github.com/syniol/xyo-sdk-rust)
 * [Go (Golang) SDK](https://github.com/syniol/xyo-sdk-go)
 * [Node.js SDK](https://github.com/syniol/xyo-sdk-node)
